@@ -26,7 +26,7 @@ async def robot_handler(websocket):
             print(f"Robot sent message: {message}")
             if message == "close":
                 connected.remove(websocket)
-                break
+                return "close"
             for conn in connected:
                 if conn != websocket:
                     await conn.send(message)
@@ -42,13 +42,17 @@ async def handler(websocket, path):
         try:
             if path == "/app":
                 print(f"App Connected.")
-                await app_handler(websocket)
+                msg = await app_handler(websocket)
+                if msg == "close":
+                    break
             elif path == "/robot":
                 print(f"Robot Connected.")
-                await robot_handler(websocket)
+                msg = await robot_handler(websocket)
+                if msg == "close":
+                    break
             else:
                 print(f"Unknown path: {path}")
-        finally:
+        except websockets.exceptions.ConnectionClosedError:
             if path == "/app":
                 print(f"App disconnected.")
             elif path == "/robot":
