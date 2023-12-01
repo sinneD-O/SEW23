@@ -8,27 +8,10 @@ uri = "ws://localhost:8765/robot"
 in_job = False
 
 
-async def start_action(ws):
-    in_job = True
-    duration = 5
-    await ws.send(f"Starting job\nDuration: {duration}sec")
-    while duration > 0:
-        await asyncio.sleep(1)
-        await ws.send(f"{duration}secs remaining...")
-        duration -= 1
-    await ws.send(f"Job done.")
-    in_job = False
-
-
 async def send_robot_message(ws):
     while True:
         message = await get_input("Geben Sie ihre Nachricht ein: ")
-        if message == "start":
-            if in_job:
-                await ws.send("Robot is currently on a mission! Please wait.")
-            else:
-                await start_action(ws)
-        elif message == "close":
+        if message == "close":
             await ws.send(message)
             await ws.close()
             exit()
@@ -40,6 +23,10 @@ async def receive_robot_messages(ws):
     while True:
         message = await ws.recv()
         print(f"\n{message}")
+        if message == "start":
+            await ws.send("Robot started mission.")
+            await asyncio.sleep(3)
+            await ws.send("Robot completed mission.")
 
 
 async def get_input(prompt):
